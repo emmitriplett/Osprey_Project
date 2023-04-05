@@ -1,13 +1,11 @@
-dat <- read.csv(file = "BBL2022_Req_828_enc_3640_20230209_120001 (2).csv")
+dat <- read.csv('./data/BBL2022_Req_828_enc_3640_20230209_120001 (2).csv')
 
 # clean the data set
 
-dim(dat)
+#dim(dat)
 uni_band_code <- unique(dat$band)
-length(uni_band_code)
-
+# length(uni_band_code)
 band_ct <- table(dat$band)
-
 dat_sub <- data.frame()
 for (i in uni_band_code) {                        # loop through each band
   tmp <- subset(dat, band == i)                   # subset to just that band
@@ -16,25 +14,25 @@ for (i in uni_band_code) {                        # loop through each band
       banding_event <- subset(tmp, event_type == 'B') # pull banding row
       encounter_event <- subset(tmp, event_type == 'E') # pull encounter row
       # remove how obtained codes that should be excluded
-      encounter_gd <- !(encounter_event$how_obtained_code %in% c(56, 97,98))
+      encounter_gd <- !(encounter_event$how_obtained_code %in% c(50, 56, 97, 98)) & (encounter_event$min_age_at_enc > 0.15)
       encounter_event <- encounter_event[encounter_gd, ]
       if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
-        tmp <- rbind(banding_event, encounter_event) # create output
+        tmp <- rbind(banding_event, tail(encounter_event, 1)) # create output
         dat_sub <- rbind(dat_sub, tmp)              # save output to big object
       }  
     }
   }
 }
 
-dim(dat_sub)
+# dim(dat_sub)
+
 #' dat_sub$how_obtained_code %in% c('')
 
-
 # group how obtained codes
-natural_codes <- c('2', '12', '13', '15', '17', '24', '30', '36', '61', '64', '7', '9', '11', '20', '31', '34')
-human_direct_codes <- c('1', '4', '10', '44')
-human_indirect_codes <- c('21', '23', '26', '27', '39', '42', '54', '60', '62', '63', '64', '25', '45')
-unknown_codes <- c('0', '50', '57', '3')
+natural_codes <- c(2, 13, 15, 17, 24, 30, 36, 61, 64, 7, 9, 20, 31, 34)
+human_direct_codes <- c(1, 4)
+human_indirect_codes <- c(10, 11, 12, 21, 23, 26, 27, 39, 42, 44, 54, 60, 62, 63, 64, 25, 45)
+unknown_codes <- c(0, 57, 3)
 
 # create column for how obtained codes
 code_table <- data.frame(how_obtained_code = c(natural_codes, human_direct_codes, human_indirect_codes, unknown_codes),
@@ -62,11 +60,22 @@ ggplot(subset(dat_sub, !is.na(code)), aes(y = after_stat(count)/sum(after_stat(c
   ggtitle(" ") +
   xlab(" ") +
   ylab(" ") +
-  scale_y_continuous(labels = percent_format()) +
+  scale_y_continuous(labels = scales::percent) +
   scale_x_discrete(labels = labels) +
   scale_fill_manual(values = c("tomato","tan2", "forestgreen", "grey")) +
   theme(legend.position="none")
 
+# with percents
+ggplot(subset(dat_sub, !is.na(code)), aes(y = (..count..)/sum(..count..), x = code, fill = code)) +
+  geom_bar( ) +
+  geom_text(stat = 'count', aes(label = scales::percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), vjust = -0.5) +
+  ggtitle(" ") +
+  xlab(" ") +
+  ylab(" ") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_x_discrete(labels = labels) +
+  scale_fill_manual(values = c("tomato","tan2", "forestgreen", "grey")) +
+  theme(legend.position="none")
 
 # separate by year 1991
 dat_sub$pre1991 <- ifelse(dat_sub$event_year < 1991, 'pre1991', 'post1991')
@@ -93,28 +102,28 @@ ggplot(subset(dat_sub, !is.na(code)), aes(x = code)) +
 # create bar plot for main ten known mortality causes
 
 # create subset for codes
-codes <- c('1', '2', '3', '4', '10', '12', '13', '15', '17', '21', '23', '24', '26', '27', '30', '39', '42', '44', '54', '57', '60', '61', '62', '63', '64', '7', '9', '11', '14', '20', '25', '31', '34', '45')
+codes <- c(1, 2, 3, 4, 10, 12, 13, 15, 17, 21, 23, 24, 26, 27, 30, 39, 42, 44, 54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
 dat_sub_subset <- dat_sub[dat_sub$how_obtained_code %in% codes, ]
 
 # group codes
-road_casualty <- c('45', '14', '60')
-taken_by_animal <- c('34', '31', '7', '11', '9', '64', '12')
-Poisoning <- c('25', '62')
-Disease <- c('20', '61')
-Striking <- c('63', '54', '42', '39', '13', '27')
-Entanglement <- c('57', '26')
-control_operations <- c('44')
-Exhaustion <- c('36')
-nest_mortality <- c('30', '24')
-oil_or_tar <- c('23')
-found_in_building <- c('21')
-Drowned <- c('17')
-weather_conditions <- c('15')
-banding_mortality <- c('10')
-traps_or_snares <- c('4')
-Injury <- c('3')
-Starvation <- c('2')
-Shot <- c('1')
+road_casualty <- c(45, 14, 60)
+taken_by_animal <- c(34, 31, 7, 11, 9, 64, 12)
+Poisoning <- c(25, 62)
+Disease <- c(20, 61)
+Striking <- c(63, 54, 42, 39, 13, 27)
+Entanglement <- c(57, 26)
+control_operations <- 44
+Exhaustion <- 36
+nest_mortality <- c(30, 24)
+oil_or_tar <- 23
+found_in_building <- 21
+Drowned <- 17
+weather_conditions <- 15
+banding_mortality <- 10
+traps_or_snares <- 4
+Injury <- 3
+Starvation <- 2
+Shot <- 1
 
 # create a new column, name it category, put it in the data frame
 library(dplyr)
@@ -140,7 +149,8 @@ dat_sub_subset <- dat_sub_subset %>%
     how_obtained_code %in% Shot ~ "Shot",
     TRUE ~ "Other"
   ))
-table(dat_sub_subset$category)
+
+sort(table(dat_sub_subset$category), decreasing = TRUE)
 
 # add color 
 library(RColorBrewer)
@@ -172,42 +182,98 @@ code_pre1991 <- table(dat_sub_subset$codes[dat_sub_subset$event_year < 1991])
 code_post1991 <- table(dat_sub_subset$codes[dat_sub_subset$event_year >= 1991])
 
 # make plot for pre and post
-# I only want the top five mortality causes in each section
 ggplot(subset(dat_sub_subset, !is.na(code)), aes(x = category)) +
   geom_bar(aes(y = (..count..)/sum(..count..), fill = pre1991), position='dodge') +
   coord_flip() +
   ggtitle(" ") +
   xlab(" ") +
   ylab(" ") +
-  facet_wrap(~ pre1991, ncol = 1) +
   scale_y_continuous(labels = percent_format()) +
-  theme(legend.position="none")
+  scale_fill_manual(values = c("indianred", "cadetblue")) +
+  labs(fill = " ")
 
 
 # calculate probability of mortality
 # mortality over time
-# mortality throughout the year (seasons)
-# mortality & age
+
+# mortality and age- binomial GLMs. no logit link. mine are continuous. how age was calculated bird banding labratory.
+
+# augment function
+library(broom)
 
 # assign alive 0 and dead 1 and create a new column
-'0' <- c('29', '33', '52', '53', '59', '66')
-'1' <- c('0', '1', '2', '3', '4', '10', '12', '13', '15', '16', '17', '21', '23', '24', '26', '27', '30', '36', '39', '42', '44', '54', '57', '60', '61', '62', '63', '64', '7', '9', '11', '14', '20', '25', '31', '34', '45')
+alive <- c(29, 33, 52, 53, 59, 66)
+dead <- c(0, 1, 2, 3, 4, 10, 12, 13, 15, 16, 17, 21, 23, 24, 26, 27, 30, 36, 39, 42, 44, 54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
 
-mort <- data.frame(how_obtained_code = c('0', '1'),
-                   codes = c(rep('0', length('0')),
-                             rep('1', length('1'))))
+mort_table <- data.frame(how_obtained_code = c(alive, dead),
+                   mort = c(rep(0, length(alive)),
+                             rep(1, length(dead))))
 
 # merge column and how obtained codes
-dat_sub <- merge(dat_sub, mort, all.x = TRUE, by = 'how_obtained_code')
+dat_sub <- merge(dat_sub, mort_table, all.x = TRUE, by = 'how_obtained_code')
 
-head(dat_sub)
+# does mortality depend on age or is it the other way around?
+# fit a logistic regression
+m <- glm(mort ~ min_age_at_enc, family = binomial, data = dat_sub)
 
-# list cannot be changed to vector
-mortality <- as.integer(mort)
 
-# plot, the y axis needs to be a scale..
-ggplot(dat_sub, aes(x = event_year, y = code.y)) +
-  method = "glm" +
+
+# create data frame to plot
+# plot..
+ggplot(dat_sub, aes(x = min_age_at_enc, y = mort)) +
+  geom_point() +
+  geom_smooth() +
+  xlab("Age") +
+  ylab("Mortality") +
+  ggtitle("")
+
+plot_df <- augment(m, type.predict = "response")
+head(plot_df)
+
+#
+base <-
+  ggplot(plot_df, aes(x = event_year)) +
+  geom_smooth(aes(y = .fitted)) +
+  labs(x = "Year", y = "Mortality")
+
+base + geom_point(aes(y = mort), alpha = 0.2)
+# 
+
+plot_df <-
+  plot_df %>% 
+  mutate(dead = ifelse(mort == 1, event_year, NA),
+         alive     = ifelse(mort == 0, event_year, NA))
+
+base <-
+  ggplot(plot_df, aes(x = event_year)) +
+  geom_smooth(aes(y = mort), color = "blue") +
+  labs(x = "Year", y = "Mortality")
+base
+
+base + 
+  geom_rug(aes(x = alive), sides = "b", alpha = 0.2) +
+  geom_rug(aes(x = dead), sides = "t", alpha = 0.2)
+
+base +
+  +     geom_histogram(aes(x = alive, y = stat(count)/1000), bins = 30, na.rm = TRUE) +
+  +     geom_histogram(aes(x = dead, y = -1*stat(count/1000)), bins = 30, na.rm = TRUE, position = position_nudge(y = 1))
+
+
+
+
+# plot mortality against year
+ggplot(dat_sub, aes(x = event_year, y = mort)) +
+  geom_point() +
+  geom_smooth() +
   xlab("Year") +
   ylab("Mortality") +
   ggtitle("Probability of mortality over time")
+
+
+# mortality throughout the year (seasons)
+# mortality & age
+
+
+
+
+
