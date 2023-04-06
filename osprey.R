@@ -14,7 +14,8 @@ for (i in uni_band_code) {                        # loop through each band
       banding_event <- subset(tmp, event_type == 'B') # pull banding row
       encounter_event <- subset(tmp, event_type == 'E') # pull encounter row
       # remove how obtained codes and age that should be excluded
-      encounter_gd <- !(encounter_event$how_obtained_code %in% c(50, 56, 97, 98)) & (encounter_event$min_age_at_enc > 0.15)
+      encounter_gd <- !(encounter_event$how_obtained_code %in% c(50, 56, 97, 98)) 
+      & (encounter_event$min_age_at_enc > 0.15)
       encounter_event <- encounter_event[encounter_gd, ]
       if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
         tmp <- rbind(banding_event, tail(encounter_event, 1)) # create output
@@ -31,11 +32,13 @@ for (i in uni_band_code) {                        # loop through each band
 # group how obtained codes
 natural_codes <- c(2, 13, 15, 17, 24, 30, 36, 61, 64, 7, 9, 20, 31, 34)
 human_direct_codes <- c(1, 4)
-human_indirect_codes <- c(10, 11, 12, 21, 23, 26, 27, 39, 42, 44, 54, 60, 62, 63, 64, 25, 45)
+human_indirect_codes <- c(10, 11, 12, 21, 23, 26, 27, 39, 42, 44, 54, 60, 62, 63, 
+                          64, 25, 45)
 unknown_codes <- c(0, 57, 3)
 
 # create column for how obtained codes
-code_table <- data.frame(how_obtained_code = c(natural_codes, human_direct_codes, human_indirect_codes, unknown_codes),
+code_table <- data.frame(how_obtained_code = c(natural_codes, human_direct_codes, 
+                                               human_indirect_codes, unknown_codes),
                          code = c(rep('natural', length(natural_codes)),
                                   rep('human_direct', length(human_direct_codes)),
                                   rep('human_indirect', length(human_indirect_codes)),
@@ -55,12 +58,13 @@ library(ggplot2)
 library(tidyverse)
 library(scales)
 
-ggplot(subset(dat_sub, !is.na(code)), aes(y = after_stat(count)/sum(after_stat(count)), x = code, fill = code)) +
+ggplot(subset(dat_sub, !is.na(code)), aes(y = after_stat(count)/sum(after_stat(count)), 
+                                          x = code, fill = code)) +
   geom_bar( ) +
   ggtitle(" ") +
   xlab(" ") +
   ylab(" ") +
-  scale_y_continuous(labels = scales::percent) #_format()   with percents
+  scale_y_continuous(labels = scales::percent) +#_format()   with percents
   scale_x_discrete(labels = labels) +
   scale_fill_manual(values = c("tomato","tan2", "forestgreen", "grey")) +
   theme(legend.position="none")
@@ -76,7 +80,8 @@ code_ct_post1991 <- table(dat_sub$code[dat_sub$event_year >= 1991])
 
 # create bar plot for pre and post 1991 (I want statistics for this)
 ggplot(subset(dat_sub, !is.na(code)), aes(x = code)) +
-  geom_bar(aes (y = after_stat(count)/sum(after_stat(count)), fill = pre1991), position='dodge') +
+  geom_bar(aes (y = after_stat(count)/sum(after_stat(count)), fill = pre1991), 
+           position='dodge') +
   ggtitle(" ") +
   xlab(" ") +
   ylab(" ") +
@@ -90,7 +95,8 @@ ggplot(subset(dat_sub, !is.na(code)), aes(x = code)) +
 # create bar plot for main ten known mortality causes
 
 # create subset for codes
-codes <- c(1, 2, 3, 4, 10, 12, 13, 15, 17, 21, 23, 24, 26, 27, 30, 39, 42, 44, 54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
+codes <- c(1, 2, 3, 4, 10, 12, 13, 15, 17, 21, 23, 24, 26, 27, 30, 39, 42, 44, 
+           54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
 dat_sub_subset <- dat_sub[dat_sub$how_obtained_code %in% codes, ]
 
 # group codes
@@ -148,6 +154,12 @@ mycolors
 
 # make the bar graph
 # I cannot get this to sort properly
+
+# class(dat_sub_subset$category)
+# dat_sub_subset$category <- as.factor(dat_sub_subset$category)
+# levels(dat_sub_subset$category) <- c('Oil or Tar', 'Weather Conditions', 'Control Operations', 'Drowned', 'Poisoning', 'Starvation', 'Nest Mortality', 'Found in Building', 'Traps or Snares', 'Disease', 'Banding Mortality', 'Taken by Animal', 'Entanglement', 'Road Casualty', 'Striking', 'Shot', 'Injury')
+                      
+
 ggplot(data = dat_sub_subset) +
   geom_bar(mapping = aes(x = category, y = after_stat(count)/sum(after_stat(count)), fill = category)) +
   coord_flip() +
@@ -181,7 +193,8 @@ ggplot(subset(dat_sub_subset, !is.na(code)), aes(x = category)) +
 
 # assign alive 0 and dead 1 and create a new column
 alive <- c(29, 33, 52, 53, 59, 66)
-dead <- c(0, 1, 2, 3, 4, 10, 12, 13, 15, 16, 17, 21, 23, 24, 26, 27, 30, 36, 39, 42, 44, 54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
+dead <- c(0, 1, 2, 3, 4, 10, 12, 13, 15, 16, 17, 21, 23, 24, 26, 27, 30, 36, 39, 
+          42, 44, 54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
 
 mort_table <- data.frame(how_obtained_code = c(alive, dead),
                    mort = c(rep(0, length(alive)),
@@ -197,12 +210,18 @@ dat_sub <-
   mutate(dead = ifelse(mort == 1, event_year, NA),
          alive = ifelse(mort == 0, event_year, NA))
 
+mod <- glm(mort ~ event_year, data = dat_sub, family = 'binomial')
+summary(mod)
+
 ggplot(dat_sub, aes(x = event_year, y = mort)) +
-  geom_smooth() +
+  stat_smooth(method=glm, method.args=list(family="binomial"), se=TRUE) +
   geom_rug(aes(x = dead), sides = "t", alpha = 0.2) +
   geom_rug(aes(x = alive), sides = "b", alpha = 0.2) +
-  geom_histogram(aes(x = alive, y = stat(count)/1000), bins = 35, na.rm = TRUE, alpha = 0.5, color = "black", fill = "grey") +
-  geom_histogram(aes(x = dead, y = -1*stat(count/1000)), bins = 35, na.rm = TRUE, position = position_nudge(y = 1), alpha = 0.5, color = "black", fill = "forestgreen") +
+  geom_histogram(aes(x = alive, y = stat(count)/1000), bins = 35, na.rm = TRUE,
+                 alpha = 0.5, color = "black", fill = "grey") +
+  geom_histogram(aes(x = dead, y = -1*stat(count/1000)), bins = 35, na.rm = TRUE,
+                 position = position_nudge(y = 1), alpha = 0.5, color = "black",
+                 fill = "forestgreen") +
   xlab("Year") +
   ylab("Mortality") +
   ggtitle(" ") +
@@ -213,7 +232,8 @@ ggplot(dat_sub, aes(x = event_year, y = mort)) +
 library(dplyr)
 # number days 1-365, 1 being 1/1 
 dat_sub <- dat_sub %>%
-  mutate(day_of_year = as.numeric(format(as.Date(paste0("2022-", event_month, "-", event_day)), "%j")))
+  mutate(day_of_year = as.numeric(format(as.Date(paste0("2022-", event_month, 
+                                                        "-", event_day)), "%j")))
 
 # create columns for dead or alive in relation to day of year
 dat_sub <-
@@ -226,8 +246,11 @@ ggplot(dat_sub, aes(x = day_of_year, y = mort)) +
   geom_smooth() +
   geom_rug(aes(x = dead), sides = "t", alpha = 0.2) +
   geom_rug(aes(x = alive), sides = "b", alpha = 0.2) +
-  geom_histogram(aes(x = alive, y = stat(count)/1000), bins = 35, na.rm = TRUE, alpha = 0.5, color = "black", fill = "grey") +
-  geom_histogram(aes(x = dead, y = -1*stat(count/1000)), bins = 35, na.rm = TRUE, position = position_nudge(y = 1), alpha = 0.5, color = "black", fill = "forestgreen") +
+  geom_histogram(aes(x = alive, y = stat(count)/1000), bins = 35, na.rm = TRUE, 
+                 alpha = 0.5, color = "black", fill = "grey") +
+  geom_histogram(aes(x = dead, y = -1*stat(count/1000)), bins = 35, na.rm = 
+                   TRUE, position = position_nudge(y = 1), alpha = 0.5, color = 
+                   "black", fill = "forestgreen") +
   xlab("Day of Year") +
   ylab("Mortality") +
   ggtitle(" ") +
@@ -255,6 +278,17 @@ for (i in uni_band_code) {                        # loop through each band
   }
 }
 
+# add mort
+alive <- c(29, 33, 52, 53, 59, 66)
+dead <- c(0, 1, 2, 3, 4, 10, 12, 13, 15, 16, 17, 21, 23, 24, 26, 27, 30, 36, 39, 
+          42, 44, 54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
+
+mort_table <- data.frame(how_obtained_code = c(alive, dead),
+                         mort = c(rep(0, length(alive)),
+                                  rep(1, length(dead))))
+
+dat_sub <- merge(dat_sub, mort_table, all.x = TRUE, by = 'how_obtained_code')
+
 #
 # fit a logistic regression? glm
 m <- glm(mort ~ min_age_at_enc, family = binomial, data = dat_sub)
@@ -268,7 +302,7 @@ dat_sub <-
 
 # plot mortality and age
 ggplot(dat_sub, aes(x = min_age_at_enc, y = mort)) +
-  geom_smooth() +
+  geom_smooth(method=glm, method.args=list(family="binomial"), se=TRUE) +
   geom_rug(aes(x = alive), sides = "b", alpha = 0.2) +
   geom_rug(aes(x = dead), sides = "t", alpha = 0.2) +
   geom_histogram(aes(x = alive, y = stat(count)/1000), bins = 35, na.rm = TRUE, alpha = 0.5, color = "black", fill = "forestgreen") +
