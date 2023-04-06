@@ -13,7 +13,7 @@ for (i in uni_band_code) {                        # loop through each band
     if (all(tmp$other_bands %in% "")) {           # make sure no other band codes
       banding_event <- subset(tmp, event_type == 'B') # pull banding row
       encounter_event <- subset(tmp, event_type == 'E') # pull encounter row
-      # remove how obtained codes that should be excluded
+      # remove how obtained codes and age that should be excluded
       encounter_gd <- !(encounter_event$how_obtained_code %in% c(50, 56, 97, 98)) & (encounter_event$min_age_at_enc > 0.15)
       encounter_event <- encounter_event[encounter_gd, ]
       if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
@@ -60,19 +60,7 @@ ggplot(subset(dat_sub, !is.na(code)), aes(y = after_stat(count)/sum(after_stat(c
   ggtitle(" ") +
   xlab(" ") +
   ylab(" ") +
-  scale_y_continuous(labels = scales::percent) +
-  scale_x_discrete(labels = labels) +
-  scale_fill_manual(values = c("tomato","tan2", "forestgreen", "grey")) +
-  theme(legend.position="none")
-
-# with percents
-ggplot(subset(dat_sub, !is.na(code)), aes(y = (..count..)/sum(..count..), x = code, fill = code)) +
-  geom_bar( ) +
-  geom_text(stat = 'count', aes(label = scales::percent((..count..)/sum(..count..)), y = (..count..)/sum(..count..)), vjust = -0.5) +
-  ggtitle(" ") +
-  xlab(" ") +
-  ylab(" ") +
-  scale_y_continuous(labels = scales::percent_format()) +
+  scale_y_continuous(labels = scales::percent) #_format()   with percents
   scale_x_discrete(labels = labels) +
   scale_fill_manual(values = c("tomato","tan2", "forestgreen", "grey")) +
   theme(legend.position="none")
@@ -155,7 +143,7 @@ sort(table(dat_sub_subset$category), decreasing = TRUE)
 # add color 
 library(RColorBrewer)
 nb.cols <- 17
-mycolors <- colorRampPalette(brewer.pal(8, "Blues"))(nb.cols)
+mycolors <- colorRampPalette(brewer.pal(8, "Paired"))(nb.cols)
 mycolors
 
 # make the bar graph
@@ -169,8 +157,6 @@ ggplot(data = dat_sub_subset) +
   scale_y_continuous(labels = percent_format()) +
   scale_fill_manual(values = mycolors) +
   theme(legend.position="none")
-
-
 
 # separate by year 1991
 dat_sub_subset$pre1991 <- ifelse(dat_sub_subset$event_year < 1991, 'pre1991', 'post1991')
@@ -193,14 +179,6 @@ ggplot(subset(dat_sub_subset, !is.na(code)), aes(x = category)) +
   labs(fill = " ")
 
 
-# calculate probability of mortality
-# mortality over time
-
-# mortality and age- binomial GLMs. no logit link. mine are continuous. how age was calculated bird banding labratory.
-
-# augment function
-library(broom)
-
 # assign alive 0 and dead 1 and create a new column
 alive <- c(29, 33, 52, 53, 59, 66)
 dead <- c(0, 1, 2, 3, 4, 10, 12, 13, 15, 16, 17, 21, 23, 24, 26, 27, 30, 36, 39, 42, 44, 54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
@@ -212,68 +190,92 @@ mort_table <- data.frame(how_obtained_code = c(alive, dead),
 # merge column and how obtained codes
 dat_sub <- merge(dat_sub, mort_table, all.x = TRUE, by = 'how_obtained_code')
 
-# does mortality depend on age or is it the other way around?
-# fit a logistic regression
-m <- glm(mort ~ min_age_at_enc, family = binomial, data = dat_sub)
-
-
-
-# create data frame to plot
-# plot..
-ggplot(dat_sub, aes(x = min_age_at_enc, y = mort)) +
-  geom_point() +
-  geom_smooth() +
-  xlab("Age") +
-  ylab("Mortality") +
-  ggtitle("")
-
-plot_df <- augment(m, type.predict = "response")
-head(plot_df)
-
-#
-base <-
-  ggplot(plot_df, aes(x = event_year)) +
-  geom_smooth(aes(y = .fitted)) +
-  labs(x = "Year", y = "Mortality")
-
-base + geom_point(aes(y = mort), alpha = 0.2)
-# 
-
-plot_df <-
-  plot_df %>% 
+# mortality and year
+# create columns for dead or alive in relation to year
+dat_sub <-
+  dat_sub %>% 
   mutate(dead = ifelse(mort == 1, event_year, NA),
-         alive     = ifelse(mort == 0, event_year, NA))
+         alive = ifelse(mort == 0, event_year, NA))
 
-base <-
-  ggplot(plot_df, aes(x = event_year)) +
-  geom_smooth(aes(y = mort), color = "blue") +
-  labs(x = "Year", y = "Mortality")
-base
-
-base + 
-  geom_rug(aes(x = alive), sides = "b", alpha = 0.2) +
-  geom_rug(aes(x = dead), sides = "t", alpha = 0.2)
-
-base +
-  +     geom_histogram(aes(x = alive, y = stat(count)/1000), bins = 30, na.rm = TRUE) +
-  +     geom_histogram(aes(x = dead, y = -1*stat(count/1000)), bins = 30, na.rm = TRUE, position = position_nudge(y = 1))
-
-
-
-
-# plot mortality against year
 ggplot(dat_sub, aes(x = event_year, y = mort)) +
-  geom_point() +
   geom_smooth() +
+  geom_rug(aes(x = dead), sides = "t", alpha = 0.2) +
+  geom_rug(aes(x = alive), sides = "b", alpha = 0.2) +
+  geom_histogram(aes(x = alive, y = stat(count)/1000), bins = 35, na.rm = TRUE, alpha = 0.5, color = "black", fill = "grey") +
+  geom_histogram(aes(x = dead, y = -1*stat(count/1000)), bins = 35, na.rm = TRUE, position = position_nudge(y = 1), alpha = 0.5, color = "black", fill = "forestgreen") +
   xlab("Year") +
   ylab("Mortality") +
-  ggtitle("Probability of mortality over time")
+  ggtitle(" ") +
+  coord_cartesian(ylim = c(0, 1))
 
 
-# mortality throughout the year (seasons)
-# mortality & age
+# mortality and day of year
+library(dplyr)
+# number days 1-365, 1 being 1/1 
+dat_sub <- dat_sub %>%
+  mutate(day_of_year = as.numeric(format(as.Date(paste0("2022-", event_month, "-", event_day)), "%j")))
+
+# create columns for dead or alive in relation to day of year
+dat_sub <-
+  dat_sub %>% 
+  mutate(alive = ifelse(mort == 0, day_of_year, NA),
+         dead     = ifelse(mort == 1, day_of_year, NA))
+
+# plot mortality and day of year
+ggplot(dat_sub, aes(x = day_of_year, y = mort)) +
+  geom_smooth() +
+  geom_rug(aes(x = dead), sides = "t", alpha = 0.2) +
+  geom_rug(aes(x = alive), sides = "b", alpha = 0.2) +
+  geom_histogram(aes(x = alive, y = stat(count)/1000), bins = 35, na.rm = TRUE, alpha = 0.5, color = "black", fill = "grey") +
+  geom_histogram(aes(x = dead, y = -1*stat(count/1000)), bins = 35, na.rm = TRUE, position = position_nudge(y = 1), alpha = 0.5, color = "black", fill = "forestgreen") +
+  xlab("Day of Year") +
+  ylab("Mortality") +
+  ggtitle(" ") +
+  coord_cartesian(ylim = c(0, 1)) +
+  geom_vline(xintercept = c(60, 152, 244, 335), linetype = "dashed", alpha = 0.5)
 
 
+# mortality and age
+# rerun for loop to include all birds regardless of age
+dat_sub <- data.frame()
+for (i in uni_band_code) {                        # loop through each band
+  tmp <- subset(dat, band == i)                   # subset to just that band
+  if (sum(tmp$event_type %in% c('B', 'E')) >= 2) { # make sure B & E present
+    if (all(tmp$other_bands %in% "")) {           # make sure no other band codes
+      banding_event <- subset(tmp, event_type == 'B') # pull banding row
+      encounter_event <- subset(tmp, event_type == 'E') # pull encounter row
+      # remove how obtained codes that should be excluded
+      encounter_gd <- !(encounter_event$how_obtained_code %in% c(50, 56, 97, 98))
+      encounter_event <- encounter_event[encounter_gd, ]
+      if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
+        tmp <- rbind(banding_event, tail(encounter_event, 1)) # create output
+        dat_sub <- rbind(dat_sub, tmp)              # save output to big object
+      }  
+    }
+  }
+}
 
+#
+# fit a logistic regression? glm
+m <- glm(mort ~ min_age_at_enc, family = binomial, data = dat_sub)
+# 
+
+# create columns for dead or alive in relation to age
+dat_sub <-
+  dat_sub %>% 
+  mutate(dead = ifelse(mort == 1, min_age_at_enc, NA),
+         alive     = ifelse(mort == 0, min_age_at_enc, NA)) 
+
+# plot mortality and age
+ggplot(dat_sub, aes(x = min_age_at_enc, y = mort)) +
+  geom_smooth() +
+  geom_rug(aes(x = alive), sides = "b", alpha = 0.2) +
+  geom_rug(aes(x = dead), sides = "t", alpha = 0.2) +
+  geom_histogram(aes(x = alive, y = stat(count)/1000), bins = 35, na.rm = TRUE, alpha = 0.5, color = "black", fill = "forestgreen") +
+  geom_histogram(aes(x = dead, y = -1*stat(count/1000)), bins = 35, na.rm = TRUE, position = position_nudge(y = 1), alpha = 0.5, color = "black", fill = "grey") +
+  xlab("Age") +
+  ylab("Mortality") +
+  ggtitle(" ") +
+  coord_cartesian(ylim = c(0, 1)) 
 
 
