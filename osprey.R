@@ -14,8 +14,7 @@ for (i in uni_band_code) {                        # loop through each band
       banding_event <- subset(tmp, event_type == 'B') # pull banding row
       encounter_event <- subset(tmp, event_type == 'E') # pull encounter row
       # remove how obtained codes and age that should be excluded
-      encounter_gd <- !(encounter_event$how_obtained_code %in% c(50, 56, 97, 98)) 
-      & (encounter_event$min_age_at_enc > 0.15)
+      encounter_gd <- !(encounter_event$how_obtained_code %in% c(50, 56, 97, 98)) & (encounter_event$min_age_at_enc > 0.15)
       encounter_event <- encounter_event[encounter_gd, ]
       if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
         tmp <- rbind(banding_event, tail(encounter_event, 1)) # create output
