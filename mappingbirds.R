@@ -32,7 +32,7 @@ for (i in uni_band_code) {                        # loop through each band
         dat_b <- rbind(dat_b, tmp)              # save output to big object
       }  
     }
-  }
+}
 
 # run loop to subset only encounter events
   
@@ -59,6 +59,38 @@ mapview(dat_b, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE, col.r
 mapview(dat_e, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE, col.regions = "lightskyblue") 
 
 # All the points.. not dif colors
-
 mapview(dat_sub, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE)
+
+
+# lets try seprating them a different way
+uni_band_code <- unique(dat$band)
+band_ct <- table(dat$band)
+dat_sub <- data.frame()
+for (i in uni_band_code) {                        # loop through each band
+  tmp <- subset(dat, band == i)                   # subset to just that band
+  if (sum(tmp$event_type %in% c('B', 'E')) >= 2) { # make sure B & E present
+    if (all(tmp$other_bands %in% "")) {           # make sure no other band codes
+      banding_event <- subset(tmp, event_type == 'B') # pull banding row
+      encounter_event <- subset(tmp, event_type == 'E') # pull encounter row
+      if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
+        tmp <- rbind(banding_event, tail(encounter_event, 1)) # create output
+        dat_sub <- rbind(dat_sub, tmp)              # save output to big object
+      }  
+    }
+  }
+}
+
+# subset out columns that aren't needed
+map_sub <- dat_sub[ , c("lat_dd", "lon_dd", "event_type", "how_obtained_code", "species_scientific_name")]     
+
+# remove missing data
+map_sub <- map_sub[complete.cases(map_sub[c("lat_dd", "lon_dd")]), ]
+
+# make columns for banding and encounter
+mapview(map_sub, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE)
+
+
+
+
+
 
