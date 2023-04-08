@@ -3,6 +3,7 @@
 # Lets try to make a map
 
 library("ggplot2")
+library("mapview")
 library("sf")
 library("rnaturalearth")
 library("rnaturalearthdata")
@@ -35,7 +36,6 @@ for (i in uni_band_code) {                        # loop through each band
 }
 
 # run loop to subset only encounter events
-  
 dat_e <- data.frame()
 for (i in uni_band_code) {                        # loop through each band
   tmp <- subset(dat, band == i)                   # subset to just that band
@@ -55,7 +55,7 @@ dat_b <- dat_b[complete.cases(dat_b[c("lat_dd", "lon_dd")]), ]
 dat_e <- dat_e[complete.cases(dat_e[c("lat_dd", "lon_dd")]), ]
 
 # plot cords
-mapview(dat_b, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE, col.regions = "seagreen")  
+mapview(dat_b, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE, col.regions = "seagreen") 
 mapview(dat_e, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE, col.regions = "lightskyblue") 
 
 # All the points.. not dif colors
@@ -81,12 +81,12 @@ for (i in uni_band_code) {                        # loop through each band
 }
 
 # subset out columns that aren't needed
-map_sub <- dat_sub[ , c("lat_dd", "lon_dd", "event_type", "how_obtained_code", "species_scientific_name")]     
+map_sub <- dat_sub[ , c("species_scientific_name", "event_type", "how_obtained_code", "lat_dd", "lon_dd")]     
 
 # remove missing data
 map_sub <- map_sub[complete.cases(map_sub[c("lat_dd", "lon_dd")]), ]
 
-# make columns for banding and encounter
+# map it
 mapview(map_sub, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE)
 
 

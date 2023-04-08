@@ -1,10 +1,27 @@
-BBL2022_Req_828_enc_3640_20230209_120001 (2).csv, an r script file containing 
-the project code, an .Rproj, a figs folder containing all figures, and a supplementary materials folder with the original data request from the Bird Banding Laboratory. 
+An Exploratory Analysis of Osprey Mortality
 
-The primary data set BBL2022_Req_828_enc_3640_20230209_120001 (2).csv includes birds encountered (and their banding event) from 1962-2022. Birds are in rows with information about when they were banded, how they were obtained, etc. in the columns. This data is in a .csv format.
-birds-metadata.csv
-site = ..... etc.
+The purpose of this project is to explore Osprey banding and recovery data from 
+the U.S. Geological Survey (USGS) Bird Banding Laboratory (BBL) database, using 
+encounters data that are linked to banding events. The dataset covers a period 
+of 62 years from 1960-2022 for Osprey banded within the United States. This 
+study is an emulation of De Pascalis et al.’s European study, “Shift in 
+proximate causes of mortality for six large migratory raptors over a century”, 
+in which mortality is calculated as the probability of encountering a bird as 
+either dead or alive. 
 
-To recreate my results, request the data set from the Bird Banding Laboratory portal. Select Osprey as the species banded in the United States, encounters through North and South America  with banding event, years 1962-2022. Then follow the code written in the .R file and adjust the file path to the name of your data request. 
+Folders and Files within this project repository:
+‘Data’: the dataset retrieved from the USGS BBL and used for all analyses.
+‘Scripts’: all codes used for data cleaning, analysis, and mapping.
+‘Figures’: the figures and maps generated for this project.
 
-I would like to acknowledge Professor Roumillat and Professor McGlinn for their help on this project.
+To recreate my results, run the ‘osprey’ code located in the scripts folder for 
+data subsetting and analysis related to causes and trends in mortality, and run 
+‘mappingbirds’ to plot encounters data.
+
+Required Packages: 
+
+I would like to acknowledge Professor Roumillat and Professor McGlinn for their 
+help on this project.
+
+
+
