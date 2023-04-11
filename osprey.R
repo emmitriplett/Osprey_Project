@@ -14,7 +14,7 @@ for (i in uni_band_code) {                        # loop through each band
       banding_event <- subset(tmp, event_type == 'B') # pull banding row
       encounter_event <- subset(tmp, event_type == 'E') # pull encounter row
       # remove how obtained codes and age that should be excluded
-      encounter_gd <- !(encounter_event$how_obtained_code %in% c(50, 56, 97, 98)) & (encounter_event$min_age_at_enc > 0.15)
+      encounter_gd <- !(encounter_event$how_obtained_code %in% c(28, 50, 56, 97, 98)) & (encounter_event$min_age_at_enc > 0.15)
       encounter_event <- encounter_event[encounter_gd, ]
       if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
         tmp <- rbind(banding_event, tail(encounter_event, 1)) # create output
@@ -30,8 +30,8 @@ for (i in uni_band_code) {                        # loop through each band
 
 # group how obtained codes
 natural_codes <- c(2, 13, 15, 17, 24, 30, 36, 61, 64, 7, 9, 20, 31, 34)
-human_direct_codes <- c(1, 4)
-human_indirect_codes <- c(10, 11, 12, 21, 23, 26, 27, 39, 42, 44, 54, 60, 62, 63, 
+human_direct_codes <- c(1, 4, 91)
+human_indirect_codes <- c(10, 11, 12, 14, 21, 23, 26, 27, 39, 42, 44, 54, 60, 62, 63, 
                           64, 25, 45)
 unknown_codes <- c(0, 57, 3)
 
@@ -57,16 +57,16 @@ library(ggplot2)
 library(tidyverse)
 library(scales)
 
-ggplot(subset(dat_sub, !is.na(code)), aes(y = after_stat(count)/sum(after_stat(count)), 
-                                          x = code, fill = code)) +
+ggplot(subset(dat_sub, !is.na(code)), aes(y = after_stat(count)/sum(after_stat(count)), x = code, fill = code)) +
   geom_bar( ) +
   ggtitle(" ") +
   xlab(" ") +
   ylab(" ") +
-  scale_y_continuous(labels = scales::percent) +#_format()   with percents
+  scale_y_continuous(labels = scales::percent_format()) +#_format()   with percents
   scale_x_discrete(labels = labels) +
   scale_fill_manual(values = c("tomato","tan2", "forestgreen", "grey")) +
-  theme(legend.position="none")
+  theme_grey() +
+  theme(legend.position="none") 
 
 # separate by year 1991
 dat_sub$pre1991 <- ifelse(dat_sub$event_year < 1991, 'pre1991', 'post1991')
@@ -75,7 +75,7 @@ levels(dat_sub$pre1991)
 
 code_ct <- table(dat_sub$code)
 code_ct_pre1991 <- table(dat_sub$code[dat_sub$event_year < 1991])
-code_ct_post1991 <- table(dat_sub$code[dat_sub$event_year >= 1991])
+code_ct_post1991 <- table(dat_sub$code[dat_sub$event_year >= 1991]) 
 
 # create bar plot for pre and post 1991 (I want statistics for this)
 ggplot(subset(dat_sub, !is.na(code)), aes(x = code)) +
@@ -87,7 +87,8 @@ ggplot(subset(dat_sub, !is.na(code)), aes(x = code)) +
   scale_y_continuous(labels = percent_format()) +
   scale_x_discrete(labels = labels) +
   scale_fill_manual(values = c("indianred", "cadetblue")) +
-  labs(fill = " ")
+  theme_grey() +
+  labs(fill = " ") 
 
 
 
@@ -95,7 +96,7 @@ ggplot(subset(dat_sub, !is.na(code)), aes(x = code)) +
 
 # create subset for codes
 codes <- c(1, 2, 3, 4, 10, 12, 13, 15, 17, 21, 23, 24, 26, 27, 30, 39, 42, 44, 
-           54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
+           54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45, 91)
 dat_sub_subset <- dat_sub[dat_sub$how_obtained_code %in% codes, ]
 
 # group codes
@@ -117,6 +118,7 @@ traps_or_snares <- 4
 Injury <- 3
 Starvation <- 2
 Shot <- 1
+illegally_taken <- 91
 
 # create a new column, name it category, put it in the data frame
 library(dplyr)
@@ -140,6 +142,7 @@ dat_sub_subset <- dat_sub_subset %>%
     how_obtained_code %in% Injury ~ "Injury",
     how_obtained_code %in% Starvation ~ "Starvation",
     how_obtained_code %in% Shot ~ "Shot",
+    how_obtained_code %in% illegally_taken ~ "Illegally Taken",
     TRUE ~ "Other"
   ))
 
@@ -147,7 +150,7 @@ sort(table(dat_sub_subset$category), decreasing = TRUE)
 
 # add color 
 library(RColorBrewer)
-nb.cols <- 17
+nb.cols <- 19
 mycolors <- colorRampPalette(brewer.pal(8, "Paired"))(nb.cols)
 mycolors
 
@@ -156,7 +159,8 @@ mycolors
 
 # class(dat_sub_subset$category)
 # dat_sub_subset$category <- as.factor(dat_sub_subset$category)
-# levels(dat_sub_subset$category) <- c('Oil or Tar', 'Weather Conditions', 'Control Operations', 'Drowned', 'Poisoning', 'Starvation', 'Nest Mortality', 'Found in Building', 'Traps or Snares', 'Disease', 'Banding Mortality', 'Taken by Animal', 'Entanglement', 'Road Casualty', 'Striking', 'Shot', 'Injury')
+dat_sub_subset$category <- factor(dat_sub_subset$category, 
+                                  levels = c('Oil or Tar', 'Weather Conditions', 'Control Operations', 'Drowned', 'Poisoning', 'Starvation', 'Nest Mortality', 'Found in Building', 'Traps or Snares', 'Disease', 'Banding Mortality', 'Taken by Animal', 'Entanglement', 'Road Casualty', 'Striking', 'Shot', 'Injury'))
                       
 
 ggplot(data = dat_sub_subset) +
@@ -167,7 +171,8 @@ ggplot(data = dat_sub_subset) +
   ylab(" ") +
   scale_y_continuous(labels = percent_format()) +
   scale_fill_manual(values = mycolors) +
-  theme(legend.position="none")
+  theme_grey() +
+  theme(legend.position="none") 
 
 # separate by year 1991
 dat_sub_subset$pre1991 <- ifelse(dat_sub_subset$event_year < 1991, 'pre1991', 'post1991')
@@ -187,13 +192,15 @@ ggplot(subset(dat_sub_subset, !is.na(code)), aes(x = category)) +
   ylab(" ") +
   scale_y_continuous(labels = percent_format()) +
   scale_fill_manual(values = c("indianred", "cadetblue")) +
+  theme_grey() +
   labs(fill = " ")
+
 
 
 # assign alive 0 and dead 1 and create a new column
 alive <- c(29, 33, 52, 53, 59, 66)
-dead <- c(0, 1, 2, 3, 4, 10, 12, 13, 15, 16, 17, 21, 23, 24, 26, 27, 30, 36, 39, 
-          42, 44, 54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
+dead <- c(0, 1, 2, 3, 4, 10, 12, 13, 15, 17, 21, 23, 24, 26, 27, 30, 36, 39, 
+          42, 44, 54, 57, 60, 61, 62, 63, 64, 91, 7, 9, 11, 14, 20, 25, 31, 34, 45)
 
 mort_table <- data.frame(how_obtained_code = c(alive, dead),
                    mort = c(rep(0, length(alive)),
@@ -224,7 +231,8 @@ ggplot(dat_sub, aes(x = event_year, y = mort)) +
   xlab("Year") +
   ylab("Mortality") +
   ggtitle(" ") +
-  coord_cartesian(ylim = c(0, 1))
+  coord_cartesian(ylim = c(0, 1)) + 
+  theme_grey() 
 
 
 # mortality and day of year
@@ -254,7 +262,8 @@ ggplot(dat_sub, aes(x = day_of_year, y = mort)) +
   ylab("Mortality") +
   ggtitle(" ") +
   coord_cartesian(ylim = c(0, 1)) +
-  geom_vline(xintercept = c(60, 152, 244, 335), linetype = "dashed", alpha = 0.5)
+  geom_vline(xintercept = c(60, 152, 244, 335), linetype = "dashed", alpha = 0.5) + 
+  theme_grey()
 
 
 # mortality and age
@@ -267,7 +276,7 @@ for (i in uni_band_code) {                        # loop through each band
       banding_event <- subset(tmp, event_type == 'B') # pull banding row
       encounter_event <- subset(tmp, event_type == 'E') # pull encounter row
       # remove how obtained codes that should be excluded
-      encounter_gd <- !(encounter_event$how_obtained_code %in% c(50, 56, 97, 98))
+      encounter_gd <- !(encounter_event$how_obtained_code %in% c(28, 50, 56, 97, 98))
       encounter_event <- encounter_event[encounter_gd, ]
       if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
         tmp <- rbind(banding_event, tail(encounter_event, 1)) # create output
@@ -279,8 +288,8 @@ for (i in uni_band_code) {                        # loop through each band
 
 # add mort
 alive <- c(29, 33, 52, 53, 59, 66)
-dead <- c(0, 1, 2, 3, 4, 10, 12, 13, 15, 16, 17, 21, 23, 24, 26, 27, 30, 36, 39, 
-          42, 44, 54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45)
+dead <- c(0, 1, 2, 3, 4, 10, 12, 13, 15, 17, 21, 23, 24, 26, 27, 30, 36, 39, 
+          42, 44, 54, 57, 60, 61, 62, 63, 64, 91, 7, 9, 11, 14, 20, 25, 31, 34, 45)
 
 mort_table <- data.frame(how_obtained_code = c(alive, dead),
                          mort = c(rep(0, length(alive)),
@@ -309,6 +318,7 @@ ggplot(dat_sub, aes(x = min_age_at_enc, y = mort)) +
   xlab("Age") +
   ylab("Mortality") +
   ggtitle(" ") +
-  coord_cartesian(ylim = c(0, 1)) 
+  coord_cartesian(ylim = c(0, 1)) +
+  theme_grey() 
 
 

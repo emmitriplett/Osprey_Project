@@ -2,76 +2,31 @@
 
 # Lets try to make a map
 
-library("ggplot2")
-library("mapview")
-library("sf")
-library("rnaturalearth")
-library("rnaturalearthdata")
+library(ggplot2)
+library(mapview)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
 
-
-# basic world map
-theme_set(theme_bw())
-world <- ne_countries(scale = "medium", returnclass = "sf")
-class(world)
-ggplot(data = world) +
-  geom_sf()
 
 # read data 
 dat <- read.csv('./data/BBL2022_Req_828_enc_3640_20230209_120001 (2).csv')
 
+# loop to subset encounters found dead
+
+#dim(dat)
 uni_band_code <- unique(dat$band)
-band_ct <- table(dat$band)
-
-# run loop to subset only banding events
-dat_b <- data.frame()
-for (i in uni_band_code) {                        # loop through each band
-  tmp <- subset(dat, band == i)                   # subset to just that band
-  if (sum(tmp$event_type %in% c('B', 'E')) >= 2) { # make sure B & E present
-    if (all(tmp$other_bands %in% "")) {           # make sure no other band codes
-      banding_event <- subset(tmp, event_type == 'B') # pull banding row
-        tmp <- rbind(banding_event) # create output
-        dat_b <- rbind(dat_b, tmp)              # save output to big object
-      }  
-    }
-}
-
-# run loop to subset only encounter events
-dat_e <- data.frame()
-for (i in uni_band_code) {                        # loop through each band
-  tmp <- subset(dat, band == i)                   # subset to just that band
-  if (sum(tmp$event_type %in% c('B', 'E')) >= 2) { # make sure B & E present
-    if (all(tmp$other_bands %in% "")) {           # make sure no other band codes
-      encounter_event <- subset(tmp, event_type == 'E') # pull encounter row
-      if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
-        tmp <- rbind(tail(encounter_event, 1)) # create output
-        dat_e <- rbind(dat_e, tmp)              # save output to big object
-      }  
-    }
-  }
-}
-
-# remove missing data
-dat_b <- dat_b[complete.cases(dat_b[c("lat_dd", "lon_dd")]), ]
-dat_e <- dat_e[complete.cases(dat_e[c("lat_dd", "lon_dd")]), ]
-
-# plot cords
-mapview(dat_b, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE, col.regions = "seagreen") 
-mapview(dat_e, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE, col.regions = "lightskyblue") 
-
-# All the points.. not dif colors
-mapview(dat_sub, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE)
-
-
-# lets try seprating them a different way
-uni_band_code <- unique(dat$band)
+# length(uni_band_code)
 band_ct <- table(dat$band)
 dat_sub <- data.frame()
 for (i in uni_band_code) {                        # loop through each band
   tmp <- subset(dat, band == i)                   # subset to just that band
   if (sum(tmp$event_type %in% c('B', 'E')) >= 2) { # make sure B & E present
     if (all(tmp$other_bands %in% "")) {           # make sure no other band codes
-      banding_event <- subset(tmp, event_type == 'B') # pull banding row
       encounter_event <- subset(tmp, event_type == 'E') # pull encounter row
+      # remove how obtained codes and age that should be excluded
+      encounter_gd <- !(encounter_event$how_obtained_code %in% c(29, 33, 52, 53, 59, 66, 28, 50, 56, 97, 98))
+      encounter_event <- encounter_event[encounter_gd, ]
       if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
         tmp <- rbind(banding_event, tail(encounter_event, 1)) # create output
         dat_sub <- rbind(dat_sub, tmp)              # save output to big object
@@ -80,15 +35,74 @@ for (i in uni_band_code) {                        # loop through each band
   }
 }
 
-# subset out columns that aren't needed
-map_sub <- dat_sub[ , c("species_scientific_name", "event_type", "how_obtained_code", "lat_dd", "lon_dd")]     
+# remove missing data
+dat_sub <- dat_sub[complete.cases(dat_sub[c("lat_dd", "lon_dd")]), ]
+
+# group codes
+road_casualty <- c(45, 14, 60)
+taken_by_animal <- c(34, 31, 7, 11, 9, 64, 12)
+Poisoning <- c(25, 62)
+Disease <- c(20, 61)
+Striking <- c(63, 54, 42, 39, 13, 27)
+Entanglement <- c(57, 26)
+control_operations <- 44
+Exhaustion <- 36
+nest_mortality <- c(30, 24)
+oil_or_tar <- 23
+found_in_building <- 21
+Drowned <- 17
+weather_conditions <- 15
+banding_mortality <- 10
+traps_or_snares <- 4
+Injury <- 3
+Starvation <- 2
+Shot <- 1
+illegally_taken <- 91
+
+# create a new column, name it category, put it in the data frame
+library(dplyr)
+dat_sub_subset <- dat_sub_subset %>%
+  mutate(cause_of_death = case_when(
+    how_obtained_code %in% road_casualty ~ "Road Casualty",
+    how_obtained_code %in% taken_by_animal ~ "Taken by Animal",
+    how_obtained_code %in% Poisoning ~ "Poisoning",
+    how_obtained_code %in% Disease ~ "Disease",
+    how_obtained_code %in% Striking ~ "Striking",
+    how_obtained_code %in% Entanglement ~ "Entanglement",
+    how_obtained_code %in% control_operations ~ "Control Operations",
+    how_obtained_code %in% Exhaustion ~ "Exhaustion",
+    how_obtained_code %in% nest_mortality ~ "Nest Mortality",
+    how_obtained_code %in% oil_or_tar ~ "Oil or Tar",
+    how_obtained_code %in% found_in_building ~ "Found in Building",
+    how_obtained_code %in% Drowned ~ "Drowned",
+    how_obtained_code %in% weather_conditions ~ "Weather Conditions",
+    how_obtained_code %in% banding_mortality ~ "Banding Mortality",
+    how_obtained_code %in% traps_or_snares ~ "Traps or Snares",
+    how_obtained_code %in% Injury ~ "Injury",
+    how_obtained_code %in% Starvation ~ "Starvation",
+    how_obtained_code %in% Shot ~ "Shot",
+    how_obtained_code %in% illegally_taken ~ "Illegally Taken",
+    TRUE ~ "Other"
+  ))
 
 # remove missing data
-map_sub <- map_sub[complete.cases(map_sub[c("lat_dd", "lon_dd")]), ]
+dat_sub_subset <- dat_sub_subset[complete.cases(dat_sub_subset[c("lat_dd", "lon_dd")]), ]
 
-# map it
-mapview(map_sub, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE)
+#subset out unneeded columns
+map_sub <- dat_sub_subset[ , c("species_scientific_name", "cause_of_death", "lat_dd", "lon_dd")]     
 
+# make a map
+mapview(map_sub, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE,
+        col.regions = "lightskyblue")
+
+
+
+
+# lets make it into a qr code
+library(qrcode)
+
+# I cant tell if this works
+qr_code('file:///Users/emmitriplett/Downloads/Osprey_Project_clean/osprey_map.html')
 
 
 
