@@ -1,22 +1,15 @@
 
 
-# Lets try to make a map
 
 library(ggplot2)
 library(mapview)
 library(sf)
-library(rnaturalearth)
-library(rnaturalearthdata)
-
 
 # read data 
 dat <- read.csv('./data/BBL2022_Req_828_enc_3640_20230209_120001 (2).csv')
 
 # loop to subset encounters found dead
-
-#dim(dat)
 uni_band_code <- unique(dat$band)
-# length(uni_band_code)
 band_ct <- table(dat$band)
 dat_sub <- data.frame()
 for (i in uni_band_code) {                        # loop through each band
@@ -28,7 +21,7 @@ for (i in uni_band_code) {                        # loop through each band
       encounter_gd <- !(encounter_event$how_obtained_code %in% c(29, 33, 52, 53, 59, 66, 28, 50, 56, 97, 98))
       encounter_event <- encounter_event[encounter_gd, ]
       if (nrow(encounter_event) > 0) {       # make sure there is still some encounters 
-        tmp <- rbind(banding_event, tail(encounter_event, 1)) # create output
+        tmp <- tail(encounter_event, 1) # create output
         dat_sub <- rbind(dat_sub, tmp)              # save output to big object
       }  
     }
@@ -59,7 +52,7 @@ Starvation <- 2
 Shot <- 1
 illegally_taken <- 91
 
-# create a new column, name it category, put it in the data frame
+# create a new column, name it cause_of_death, put it in the data frame
 library(dplyr)
 dat_sub_subset <- dat_sub_subset %>%
   mutate(cause_of_death = case_when(
@@ -82,7 +75,7 @@ dat_sub_subset <- dat_sub_subset %>%
     how_obtained_code %in% Starvation ~ "Starvation",
     how_obtained_code %in% Shot ~ "Shot",
     how_obtained_code %in% illegally_taken ~ "Illegally Taken",
-    TRUE ~ "Other"
+    TRUE ~ "Unknown"
   ))
 
 # remove missing data
