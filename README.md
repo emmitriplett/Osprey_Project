@@ -18,8 +18,6 @@ To recreate my results, run the ‘osprey’ code located in the scripts folder 
 data subsetting and analysis related to causes and trends in mortality, and run 
 ‘mappingbirds’ to plot encounters data.
 
-Required Packages: 
-
 I would like to acknowledge Professor Roumillat and Professor McGlinn for their 
 help on this project.
 
