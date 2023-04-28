@@ -29,11 +29,11 @@ for (i in uni_band_code) {                        # loop through each band
 #' dat_sub$how_obtained_code %in% c('')
 
 # group how obtained codes
-natural_codes <- c(2, 13, 15, 17, 24, 30, 36, 61, 64, 7, 9, 20, 31, 34)
-human_direct_codes <- c(1, 4, 91)
-human_indirect_codes <- c(10, 11, 12, 14, 21, 23, 26, 27, 39, 42, 44, 54, 60, 62, 63, 
+natural_codes <- c(2, 15, 17, 24, 30, 36, 61, 64, 7, 9, 20, 31, 34)
+human_direct_codes <- c(1, 4, 91, 44)
+human_indirect_codes <- c(10, 11, 12, 14, 21, 23, 26, 27, 39, 42, 54, 60, 62, 63, 
                           64, 25, 45)
-unknown_codes <- c(0, 57, 3)
+unknown_codes <- c(0, 13, 57, 3)
 
 # create column for how obtained codes
 code_table <- data.frame(how_obtained_code = c(natural_codes, human_direct_codes, 
@@ -77,7 +77,7 @@ code_ct <- table(dat_sub$code)
 code_ct_pre1991 <- table(dat_sub$code[dat_sub$event_year < 1991])
 code_ct_post1991 <- table(dat_sub$code[dat_sub$event_year >= 1991]) 
 
-# create bar plot for pre and post 1991 (I want statistics for this)
+# create bar plot for pre and post 1991
 ggplot(subset(dat_sub, !is.na(code)), aes(x = code)) +
   geom_bar(aes (y = after_stat(count)/sum(after_stat(count)), fill = pre1991), 
            position='dodge') +
@@ -92,7 +92,7 @@ ggplot(subset(dat_sub, !is.na(code)), aes(x = code)) +
 
 
 
-# create bar plot for main ten known mortality causes
+# create bar plot for known mortality causes
 
 # create subset for codes
 codes <- c(1, 2, 3, 4, 10, 12, 13, 15, 17, 21, 23, 24, 26, 27, 30, 39, 42, 44, 
@@ -104,7 +104,7 @@ road_casualty <- c(45, 14, 60)
 taken_by_animal <- c(34, 31, 7, 11, 9, 64, 12)
 Poisoning <- c(25, 62)
 Disease <- c(20, 61)
-Striking <- c(63, 54, 42, 39, 13, 27)
+Striking <- c(42, 39, 54, 63, 54, 13, 27)
 Entanglement <- c(57, 26)
 control_operations <- 44
 Exhaustion <- 36
@@ -159,8 +159,8 @@ mycolors
 
 # class(dat_sub_subset$category)
 # dat_sub_subset$category <- as.factor(dat_sub_subset$category)
-dat_sub_subset$category <- factor(dat_sub_subset$category, 
-                                  levels = c('Oil or Tar', 'Weather Conditions', 'Control Operations', 'Drowned', 'Poisoning', 'Starvation', 'Nest Mortality', 'Found in Building', 'Traps or Snares', 'Disease', 'Banding Mortality', 'Taken by Animal', 'Entanglement', 'Road Casualty', 'Striking', 'Shot', 'Injury'))
+ # dat_sub_subset$category <- factor(dat_sub_subset$category, 
+                                 # levels = c('Oil or Tar', 'Weather Conditions', 'Banding Mortality', 'Illegally Taken', 'Drowned', 'Poisoning', 'Starvation', 'Nest Mortality', 'Found in Building', 'Traps or Snares', 'Disease', 'Control Operations', 'Taken by Animal', 'Entanglement', 'Road Casualty', 'Striking', 'Shot', 'Injury'))
                       
 
 ggplot(data = dat_sub_subset) +
@@ -194,7 +194,6 @@ ggplot(subset(dat_sub_subset, !is.na(code)), aes(x = category)) +
   scale_fill_manual(values = c("indianred", "cadetblue")) +
   theme_grey() +
   labs(fill = " ")
-
 
 
 # assign alive 0 and dead 1 and create a new column
