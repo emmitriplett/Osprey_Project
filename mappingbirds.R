@@ -1,5 +1,10 @@
-
-
+#' ---
+#' title: Map of birds encountered dead
+#' author: Emmi Triplett
+#' date: 13 Apr 2023
+#' output: html_document
+#' ---
+#' 
 
 library(ggplot2)
 library(mapview)
@@ -30,6 +35,10 @@ for (i in uni_band_code) {                        # loop through each band
 
 # remove missing data
 dat_sub <- dat_sub[complete.cases(dat_sub[c("lat_dd", "lon_dd")]), ]
+
+codes <- c(1, 2, 3, 4, 10, 12, 13, 15, 17, 21, 23, 24, 26, 27, 30, 39, 42, 44, 
+           54, 57, 60, 61, 62, 63, 64, 7, 9, 11, 14, 20, 25, 31, 34, 45, 91)
+dat_sub_subset <- dat_sub[dat_sub$how_obtained_code %in% codes, ]
 
 # group codes
 road_casualty <- c(45, 14, 60)
@@ -82,20 +91,11 @@ dat_sub_subset <- dat_sub_subset %>%
 dat_sub_subset <- dat_sub_subset[complete.cases(dat_sub_subset[c("lat_dd", "lon_dd")]), ]
 
 #subset out unneeded columns
-map_sub <- dat_sub_subset[ , c("species_scientific_name", "cause_of_death", "lat_dd", "lon_dd")]     
+map_sub <- dat_sub_subset[ , c("species_scientific_name", "event_year", "how_obtained_code", "lat_dd", "lon_dd")]     
 
 # make a map
 mapview(map_sub, xcol = "lon_dd", ycol = "lat_dd", crs = 4269, grid = FALSE,
         col.regions = "lightskyblue")
-
-
-
-
-# lets make it into a qr code
-library(qrcode)
-
-# I cant tell if this works
-qr_code('file:///Users/emmitriplett/Downloads/Osprey_Project_clean/osprey_map.html')
 
 
 
